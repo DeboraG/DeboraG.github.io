@@ -89,9 +89,6 @@ var canvasStaffCtx = canStaff.getContext("2d");
 var canvas = document.querySelector('.visualizer');
 var canvasCtx = canvas.getContext("2d");
 
-sizeCanvas();
-
-
 var idAnimationFrame;
 
 //main block for doing the audio display
@@ -124,11 +121,11 @@ var colorBreakHz = 130.813;  // boundary of octaves (shown with rainbow colored 
 // Calculated parameters
 var hzPerBin = audioCtx.sampleRate / analyser.fftSize;
 
-var minDisplayedBin = hzToBin(minHz);
-var maxDisplayedBin = hzToBin(maxHz) + 1;
-var numDisplayedOctaves = Math.log2(maxHz/minHz);
+var minDisplayedBin;
+var maxDisplayedBin;
+var numDisplayedOctaves;
+sizeCanvas();
 var lowestOctaveTonicHz = calculateLowestOctaveTonicHz(refTonicHz);
-
 
 // State variables
 var majorMode = true;
