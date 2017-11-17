@@ -347,6 +347,16 @@ function sizeCanvas() {
     WIDTH=intendedWidth;
     HEIGHT=intendedHeight;
 
+    // Hacky fixup for button text line-breaking at different widths
+    // Force target button and shapes button to break when the mode button does
+    // Works on Chrome down to about 300px width
+    targetButton.innerHTML = "Set Targets";
+    if (targetButton.clientHeight < modeButton.clientHeight)
+        targetButton.innerHTML = "Set<br>Targets";
+
+    shapesButton.innerHTML = "4 or 7 Shapes";
+    if (shapesButton.clientHeight < modeButton.clientHeight)
+        shapesButton.innerHTML = "4 or 7<br>Shapes";
 }
 
 /**********************************************************************
