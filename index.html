@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Singing School</title>
+	
+	<!--[if le IE 9]>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="scripts/respond.js"></script>
+    <![endif]-->
+    <link href='https://fonts.googleapis.com/css?family=Alegreya+SC|Libre+Baskerville|Roboto|Open+Sans' rel='stylesheet' type='text/css'>
+    <link href="styles/normalize.css" rel="stylesheet" type="text/css">
+    <link href="styles/app.css" rel="stylesheet" type="text/css">
+	
+</head>
+<body>
+  <div class="wrapper">
+    <section>
+    <h1>Singing School</h1>
+    <div style="display:none;">
+      <!-- define a trove of images to display on the canvas -->
+      <!-- as in https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage -->
+      <img id="major4" src="images/major4scaled.jpg">
+      <img id="minor4" src="images/minor4scaled.jpg">
+      <img id="major7" src="images/major7scaled.jpg">
+      <img id="minor7" src="images/minor7scaled.jpg">
+    </div>
+    <div class="canvas-div">
+      <canvas class="staff" id="staffCanvas" width="640" height="200"></canvas> 
+      <canvas class="visualizer" id="fftCanvas" width="640" height="200"></canvas> 
+    </div>
+
+      <div class="controls-div">
+        <!-- type='button' keeps the page from reloading 
+        https:/stackoverflow.com/questions/1878264/how-do-i-make-an-html-button-not-reload-the-page -->
+        <button type= 'button' id="target-btn">Set Targets</button>
+        <button type= 'button' id="mode-btn">Major or Minor</button>
+        <button type= 'button' id="shapes-btn">4 or 7 Shapes</button>
+      </div>
+      <div class="controls-div">
+          <div class="slider-label-cell">
+            <label for "volslider">Volume</label>
+          </div>
+          <div class="slider-cell">
+            <input id="volslider" type="range" min="0" max="100" class="slider" value="10">
+          </div>
+      </div>
+      <div class="instruction-div">
+        <iframe src="instructions1.html"></iframe>
+      </div>
+
+
+
+  </div>
+
+  </section>
+
+    <script src="scripts/app.js"></script>
+	
+</body>
+</html>

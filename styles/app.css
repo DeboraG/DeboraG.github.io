@@ -1,0 +1,211 @@
+body {
+    font-size: 0.9em;
+    font-family:  'Open Sans', regular;
+    color: #000;
+    padding:0;
+    margin:0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    background:
+        /* #559230 = rgb(85,146,48); */
+        /* #2B5510 = rgb(43,85,16) */
+        /*linear-gradient(90deg, #2B5510, #559230, #559230, #2B5510);*/
+        linear-gradient(90deg, #000020, #202040, #202040, #000020);
+}
+
+
+section {
+    /* was 5rem top with nav */
+    margin: 2.5rem auto 2.5rem;
+    position: relative;
+    padding: 1.25rem;
+    max-width: 64rem;
+    background: FloralWhite;
+}
+
+h1 {
+
+    font-size: 2.5rem;
+    color: #000000;
+    margin: 0.67rem 0;
+    font-family: 'Roboto', regular;
+    font-weight: bold;
+    text-align: center;
+}
+h2 {
+
+    font-size: 1.5rem;
+    color: #000000;
+    margin: 0.83rem 0 ;
+    font-weight: bold;
+}
+h3{
+
+    font-size: 1.17rem;
+    color: #000000;
+    margin: 1rem 0 ;
+    font-weight: bold;
+}
+h4{
+
+    font-size: 1rem;
+    color: #000000;
+    margin: 1.33rem 0 ;
+    font-weight: bold;
+}
+
+p {
+    display: block;
+    margin: 1rem 0;
+}
+
+#instructions {
+    background: none;
+}
+
+
+a {
+    color:  #439c16; /* hsl(100, 75%, 35%) */
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #7fc752; /* hsl(97, 51%, 55%) */
+}
+
+
+
+
+.wrapper {
+	height: 100%;
+	margin: 0 auto;
+}
+
+/* || main UI sections */
+
+.canvas-div {
+  width:100%;
+  margin: auto;
+  display:block;
+}
+
+canvas {
+  margin-top: 10px;
+  border: 2px inset rgba(0,0,0,0.7);
+  border-radius: 5px;
+  // https://stackoverflow.com/questions/20958852/width-inherit-minus-or-plus
+  position: relative;
+  width: calc(100% - 4px);
+  //box-shadow: 0 -2px 4px rgba(0,0,0,0.7),
+  //            0 3px 4px rgba(0,0,0,0.7);
+}
+.staff {
+  background:url("../images/major4scaled.jpg");
+  background-size: 100% 100%;
+}
+
+
+#scale-ref-img {
+  display: block;
+  margin: auto;
+  border: 1px solid black;
+}
+
+/* sider styling from https://www.w3schools.com/howto/howto_js_rangeslider.asp */
+.controls-div {
+  width:100%;
+  margin: auto;
+  display:table;
+  font-size: 1rem;
+  color: #000000;
+  margin: 0.67rem 0;
+  font-weight: bold;
+  text-align: center;
+}
+
+.controls-div label {
+    text-align: bottom;
+}
+
+/* https://stackoverflow.com/questions/773517/style-input-element-to-fill-remaining-width-of-its-container */
+.slider-label-cell {
+  display:table-cell;
+  width:1px;
+  padding: 1rem 1rem 1rem 0;
+}
+
+.slider-cell {
+  display: table-cell;
+  width: 100%;
+  padding: 1rem 0 1rem 1rem;
+}
+
+
+
+.slider {
+    -webkit-appearance: none;
+    height: 0.5rem;
+    width: 100%;
+    /*background: #d3d3d3;*/
+    background: #202040;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: black;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.slider::-moz-range-thumb {
+    width: 1.5rem;
+    height: 1.5rem;
+    background: black;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* button styling */
+
+button {
+    background-color: transparent;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.7);
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    color: black;
+    border: 2px solid #e3dccf;
+    width: 33%;
+    margin: 1rem auto 0.5rem;
+    padding: .5rem; 
+    display: inline;
+}
+
+button:hover {
+    background: #d3d3d3;
+}
+
+
+.instruction-div {
+  width:100%;
+  display:block;
+}
+iframe {
+  /* width is hacky and I don't yet understand why it oveflows at 100% */
+  width:calc(100% - 36px);
+  margin:auto;
+  display:block;
+  padding: 1rem;
+}
