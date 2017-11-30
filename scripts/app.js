@@ -129,7 +129,7 @@ var lowestOctaveTonicHz = calculateLowestOctaveTonicHz(refTonicHz);
 
 // State variables
 var majorMode = true;
-var shapes4 = true;
+var shapes4 = false;
 var tonePlaying = false;
 
 canvasStaffCtx.fillStyle = 'rgb(0, 0, 0)';
@@ -462,8 +462,8 @@ function drawTargetPitchLines(canvasContext, canvasHeight) {
         [                                         // major notes
             {ratio:1, color:'orange', width:1},
             {ratio:1.25, color:'blue', width:1},  // just major third is 1.25; equal = 1.25992
-            {ratio:1.5, color:'red', width:1},    // just perfect fifth; equal = 1.49831
-            {ratio:1.88, color:'blueviolet', width:1} // mi  (2 / 16/15?); equal = 1.88775
+            {ratio:1.5, color:'red', width:1}    // just perfect fifth; equal = 1.49831
+            //{ratio:1.88, color:'blueviolet', width:1} // mi  (2 / 16/15?); equal = 1.88775
         ],
         [
             {ratio:1, color:'orange', width:1},   // minor notes
