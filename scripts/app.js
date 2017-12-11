@@ -62,10 +62,127 @@ var stream;
 
 //set up the audio node we will use for the app
 
+// Anti-aliasing filter before decimating
+// This is crazy that the coefficients aren't exposed
+// I wanted a 4th order elliptical filter for sharp cutoff.
+// Can I even make that with what they expose?
+// For now, use 2 cascaded Butterworths (Linkwitz-Riley)
+// Down 6 dB at fc, which is set to 1500 Hz
+// We mean to sample at 48/8 = 6 kHz
+
+var fftSize = 2048;  // power of 2
+var downSampleRatio = 8;
+var numSegments = 4;
+
+var biquad1 = audioCtx.createBiquadFilter();
+var biquad2 = audioCtx.createBiquadFilter();
+biquad1.type = "lowpass";
+biquad1.frequency.value = 1500;
+biquad1.Q = 0.7071
+biquad2.type = "lowpass";
+biquad2.frequency.value = 1500;
+biquad2.Q = 0.7071
+
+// Create a script node to dump the data to a buffer for decimating
+// We need 1/3 of a second worth of data (16384/48000) to get 3 Hz resolution for bass bins
+// But that update rate makes the screen look jerky
+// Try doing it numsegments times as often - making the scriptProcessor buffer 1/numSegments
+// of the sizeand reusing the saved samples again on the next FFT
+var scriptNode = audioCtx.createScriptProcessor(downSampleRatio*fftSize/numSegments, 1, 1);
+var savedSamples = new Array(numSegments);
+for (var i = 0; i < numSegments; i++)
+{
+    savedSamples[i] = new Array(fftSize/numSegments).fill(0);
+}
+var savedSamplesIndex = 0;
+
+biquad1.connect(biquad2);
+biquad2.connect(scriptNode);
+
+// Performance counters
+var lastAudioProcessTime = Date.now();
+var lastAnimationFrameTime = Date.now();
+var audioProcessCounter = 0;
+var animationFrameCounter = 0;
+
+// Create the buffer
+
+var real = new Array(fftSize);
+var imaginary = new Array(fftSize);
+
+var magnitude = new Array(fftSize/2).fill(0);
+var magdB = new Array(fftSize/2).fill(0);
+var freqDataArray = new Uint8Array(fftSize/2);
+var smoothingTimeConstant = 0.65;
 var analyser = audioCtx.createAnalyser();
-analyser.minDecibels = -90;
-analyser.maxDecibels = -10;
-analyser.smoothingTimeConstant = 0.85;
+var minDecibels = -80;
+var maxDecibels = -10;
+var byteScaleFactor = 255/(maxDecibels - minDecibels);
+
+
+var fftWindow = new Array(fftSize);
+for (var i = 0; i < fftSize; i++)
+{
+    // Blackman window
+    // I don't see that the fft.js function scales by 1/N, so include 1/N factor while windowing
+    fftWindow[i] = (0.42 - 0.5 * Math.cos(2 * Math.PI * i / (fftSize-1)) + 0.08 * Math.cos(4 * Math.PI * i / (fftSize-1)))/fftSize;
+}
+
+scriptNode.onaudioprocess = function(audioProcessingEvent) {
+    /*
+    audioProcessCounter++;
+    if (audioProcessCounter > 20)
+    {
+        var time = Date.now();
+        console.log('Average audio process interval '+ (time - lastAudioProcessTime)/20 + ' ms');
+        lastAudioProcessTime = time;
+        audioProcessCounter = 0;
+    }
+    */
+
+
+    var inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
+    //console.log("On audio process");
+
+    // This is a lot of copying.  Optimize?
+    for (var i = 0; i < inputData.length/downSampleRatio; i++)
+    {
+        for (var j = 0; j < numSegments - 1; j++)
+        {
+            real[j*fftSize/numSegments + i] = savedSamples[(savedSamplesIndex + j + 1)%numSegments][i] * fftWindow[j*fftSize/numSegments + i];
+        }
+        real[(numSegments - 1)*fftSize/numSegments + i] = inputData[i*downSampleRatio] * fftWindow[(numSegments - 1)*fftSize/numSegments + i];
+        savedSamples[savedSamplesIndex][i] = inputData[i*downSampleRatio];
+    }
+    savedSamplesIndex = (savedSamplesIndex + 1)%numSegments;
+    imaginary.fill(0);
+
+    transform(real, imaginary);
+
+    // find magnitudes and smooth as in the web audio spec
+    // we only care about the first N/2 - 1 points
+    for (var i = 0; i < fftSize/2; i++)
+    {
+        magnitude[i] = magnitude[i] * smoothingTimeConstant 
+            + Math.sqrt((real[i]*real[i] + imaginary[i]*imaginary[i])) * (1 - smoothingTimeConstant);
+        var magdB = 20 * Math.log10(magnitude[i]);
+        if (magdB < minDecibels)
+            freqDataArray[i] = 0;
+        else if (magdB > maxDecibels)
+            freqDataArray[i] = 255;
+        else
+            freqDataArray[i] = (magdB - minDecibels) * byteScaleFactor;
+    }
+}
+
+
+var dummyAnalyser = audioCtx.createAnalyser();
+dummyAnalyser.fftSize = 32; // minimum allowed
+scriptNode.connect(dummyAnalyser);  // onAudioProcess event doesn't fire in Chrome if scriptNode isn't connected to something
+// By experiment, a dummy gain node didn't satisfy it
+// https://github.com/WebAudio/web-audio-api/issues/345
+// https://bugs.chromium.org/p/chromium/issues/detail?id=327649
+
 
 var oscillator = audioCtx.createOscillator();
 oscillator.type = 'sine';
@@ -96,7 +213,7 @@ var idAnimationFrame;
 navigator.mediaDevices.getUserMedia({audio: true})  // constraints - only audio needed for this app
 .then(function(stream) {
     source = audioCtx.createMediaStreamSource(stream);
-    source.connect(analyser);
+    source.connect(biquad1);
 
     showAudio();
 })
@@ -109,17 +226,17 @@ WIDTH = canvas.width;
 HEIGHT = canvas.height;
 
 // Independent parameters
-analyser.fftSize = 16384;  // power of 2
+
 // High extreme, at a minimum, for non-coloratura sopranos is C6 = 1046.5 Hz
 // TYpical opera bass has a range down to E2 = 82.4069 Hz
 var minHz = 80; // must be greater than 0
-var maxHz = 1280;  // must be less than audioCtx.sampleRate/analyser.fftSize/2;
+var maxHz = 1280;  // must be less than audioCtx.sampleRate/downSampleRatio/2;
 var refTonicHz = 261.63;      // controls lines
 var colorBreakHz = 130.813;  // boundary of octaves (shown with rainbow colored bars)
 
 
 // Calculated parameters
-var hzPerBin = audioCtx.sampleRate / analyser.fftSize;
+var hzPerBin = audioCtx.sampleRate / downSampleRatio / fftSize;
 
 var minDisplayedBin;
 var maxDisplayedBin;
@@ -132,6 +249,9 @@ var majorMode = true;
 var shapes4 = false;
 var tonePlaying = false;
 
+
+
+
 canvasStaffCtx.fillStyle = 'rgb(0, 0, 0)';
 canvasStaffCtx.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -139,8 +259,6 @@ var canvasStaffHeight = 200;
 canvasCtx.fillStyle = 'rgb(0, 0, 0)';
 canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
 drawReferenceScaleImage(refTonicHz);
-
-var dataArrayAlt = new Uint8Array(hzToBin(maxHz) + 1);
 
 
 function showAudio() {
@@ -172,8 +290,17 @@ function showAudio() {
 
     var drawSpectrum = function() {
         idAnimationFrame = requestAnimationFrame(drawSpectrum);
+        /*
+        animationFrameCounter++;
+        if (animationFrameCounter > 500)
+        {
+            var time = Date.now();
+            console.log('Average animation frame interval '+ (time - lastAnimationFrameTime)/500 + ' ms');
+            lastAnimationFrameTime = time;
+            animationFrameCounter = 0;
+        }
+        */
 
-        analyser.getByteFrequencyData(dataArrayAlt);
 
         canvasCtx.fillStyle = 'rgb(0, 0, 0)';
         canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -184,7 +311,7 @@ function showAudio() {
         for(var i = 0; i < maxDisplayedBin - minDisplayedBin; i++) {
             binHz = binToHz(minDisplayedBin) + i * hzPerBin;
             /* TODO: refine scaling - was chosen by experiment*/
-            barHeight = dataArrayAlt[i + minDisplayedBin] * HEIGHT /250;
+            barHeight = freqDataArray[i + minDisplayedBin] * HEIGHT /256;
 
             if (binHz >= colorBreakHz*16) {
                 canvasCtx.fillStyle = 'violet';
@@ -260,7 +387,7 @@ canStaff.onmouseleave = function(e) {
 }
 
 targetButton.onclick = function(e) {
-    var peakHz = getPeakFreq(dataArrayAlt);
+    var peakHz = getPeakFreq(freqDataArray);
     console.log('peakHz :'+peakHz);
     if ((peakHz > minHz) && (peakHz < maxHz)) {
         refTonicHz = peakHz;
