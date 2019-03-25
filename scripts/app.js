@@ -347,6 +347,7 @@ function showAudio() {
 }
 
 canvas.onmousedown = function(e) {
+    audioCtx.resume();
     playToneFromCanvas(e);
     tonePlaying = true;
 }
@@ -367,6 +368,7 @@ canvas.onmouseleave = function(e) {
 }
 
 canStaff.onmousedown = function(e) {
+    audioCtx.resume();
     playToneFromCanvas(e);
     tonePlaying = true;
 }
@@ -381,6 +383,7 @@ canStaff.onmouseup = function(e) {
     releaseTone();
     tonePlaying = false;
 }
+
 canStaff.onmouseleave = function(e) {
     releaseTone();
     tonePlaying = false;
